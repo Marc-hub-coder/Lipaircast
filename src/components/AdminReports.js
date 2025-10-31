@@ -360,13 +360,7 @@ const AdminReports = () => {
                 </div>
               )}
               
-              <div className="summary-card">
-                <div className="card-icon">🚨</div>
-                <div className="card-content">
-                  <h3>Alerts Count</h3>
-                  <p className="card-value">0</p>
-                </div>
-              </div>
+              {/* Alerts Count removed by request */}
             </div>
 
             {/* Daily Data Table */}
