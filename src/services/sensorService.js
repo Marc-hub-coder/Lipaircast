@@ -110,7 +110,7 @@ class SensorService {
 
       const recentArray = Object.entries(recentMap)
         .map(([key, r]) => ({ key, r }))
-        .filter(({ r }) => r && (r.aqi !== undefined || r.so2 !== undefined || r.pm25 !== undefined || r.pm10 !== undefined || r.co !== undefined || r.no2 !== undefined || r.humidity !== undefined || r.temperature !== undefined))
+        .filter(({ r }) => r && (r.aqi !== undefined || r.so2 !== undefined || r.pm25 !== undefined || r.pm10 !== undefined || r.co !== undefined || r.no2 !== undefined || r.humidity !== undefined || r.temperature !== undefined || r.windspeed !== undefined || r.windSpeed !== undefined || r.wind_speed !== undefined || r.wind !== undefined || r.ws !== undefined))
         .map(({ key, r }) => {
           const tsField = r.timestamp ?? r.createdAt ?? r.time ?? r.t ?? key;
           return {
@@ -122,6 +122,12 @@ class SensorService {
             no2: r.no2 !== undefined ? toNumber(r.no2) : undefined,
             humidity: r.humidity !== undefined ? toNumber(r.humidity) : undefined,
             temperature: r.temperature !== undefined ? toNumber(r.temperature) : undefined,
+            windspeed: (r.windspeed !== undefined ? toNumber(r.windspeed)
+              : r.windSpeed !== undefined ? toNumber(r.windSpeed)
+              : r.wind_speed !== undefined ? toNumber(r.wind_speed)
+              : r.wind !== undefined ? toNumber(r.wind)
+              : r.ws !== undefined ? toNumber(r.ws)
+              : undefined),
             timestamp: String(tsField || ''),
             tsNum: parseTs(tsField)
           };
@@ -171,12 +177,14 @@ class SensorService {
         so2: enableSo2Filter ? clamp(latestSo2, 0, 3.5) : (latest.so2 !== undefined ? latest.so2 : 0),
         humidity: latest.humidity !== undefined ? latest.humidity : 0,
         temperature: latest.temperature !== undefined ? latest.temperature : 0,
+        windspeed: latest.windspeed !== undefined ? latest.windspeed : 0,
         pm25Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm25 })),
         pm10Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm10 })),
         coLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.co })),
         no2Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.no2 })),
         humidityLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.humidity })),
         temperatureLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.temperature })),
+        windLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.windspeed })),
         so2Levels: (filteredForSo2.length ? filteredForSo2 : recentArray).map(r => ({ time: label(r.timestamp), value: enableSo2Filter ? clamp(r.so2 ?? 0, 0, 3.5) : (r.so2 ?? 0) })),
         particulateMatter: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm25 }))
       };
@@ -239,7 +247,7 @@ class SensorService {
 
           const recentArray = Object.entries(recentMap)
             .map(([key, r]) => ({ key, r }))
-            .filter(({ r }) => r && (r.aqi !== undefined || r.so2 !== undefined || r.pm25 !== undefined || r.pm10 !== undefined || r.co !== undefined || r.no2 !== undefined || r.humidity !== undefined || r.temperature !== undefined))
+            .filter(({ r }) => r && (r.aqi !== undefined || r.so2 !== undefined || r.pm25 !== undefined || r.pm10 !== undefined || r.co !== undefined || r.no2 !== undefined || r.humidity !== undefined || r.temperature !== undefined || r.windspeed !== undefined || r.windSpeed !== undefined || r.wind_speed !== undefined || r.wind !== undefined || r.ws !== undefined))
             .map(({ key, r }) => {
               const tsField = r.timestamp ?? r.createdAt ?? r.time ?? r.t ?? key;
               return {
@@ -251,6 +259,12 @@ class SensorService {
                 no2: r.no2 !== undefined ? toNumber(r.no2) : undefined,
                 humidity: r.humidity !== undefined ? toNumber(r.humidity) : undefined,
                 temperature: r.temperature !== undefined ? toNumber(r.temperature) : undefined,
+                windspeed: (r.windspeed !== undefined ? toNumber(r.windspeed)
+                  : r.windSpeed !== undefined ? toNumber(r.windSpeed)
+                  : r.wind_speed !== undefined ? toNumber(r.wind_speed)
+                  : r.wind !== undefined ? toNumber(r.wind)
+                  : r.ws !== undefined ? toNumber(r.ws)
+                  : undefined),
                 timestamp: String(tsField || ''),
                 tsNum: parseTs(tsField)
               };
@@ -279,12 +293,14 @@ class SensorService {
             so2: enableSo2Filter ? Math.max(0, Math.min(3.5, (filteredForSo2.length ? filteredForSo2[filteredForSo2.length - 1].so2 : (latest.so2 ?? 0)))) : (latest.so2 ?? 0),
             humidity: latest.humidity !== undefined ? latest.humidity : 0,
             temperature: latest.temperature !== undefined ? latest.temperature : 0,
+            windspeed: latest.windspeed !== undefined ? latest.windspeed : 0,
             pm25Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm25 })),
             pm10Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm10 })),
             coLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.co })),
             no2Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.no2 })),
             humidityLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.humidity })),
             temperatureLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.temperature })),
+            windLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.windspeed })),
             so2Levels: (filteredForSo2.length ? filteredForSo2 : recentArray).map(r => ({ time: label(r.timestamp), value: enableSo2Filter ? Math.max(0, Math.min(3.5, r.so2 ?? 0)) : (r.so2 ?? 0) })),
             particulateMatter: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm25 }))
           };
@@ -376,6 +392,10 @@ class SensorService {
         value: rawData.temperature || 0,
         level: this.calculateTemperatureLevel(rawData.temperature || 0)
       },
+      wind: {
+        value: rawData.windspeed || 0,
+        level: this.calculateWindLevel(rawData.windspeed || 0)
+      },
       clearTime: {
         hours: rawData.clearTime?.hours || 0,
         minutes: rawData.clearTime?.minutes || 0,
@@ -388,6 +408,7 @@ class SensorService {
       no2Levels: rawData.no2Levels || [],
       humidityLevels: rawData.humidityLevels || [],
       temperatureLevels: rawData.temperatureLevels || [],
+      windLevels: rawData.windLevels || [],
       particulateMatter: rawData.particulateMatter || [],
       maintenance: {
         dashboard: false,
@@ -439,6 +460,15 @@ class SensorService {
     if (temperatureValue < 25) return 'COMFORTABLE';
     if (temperatureValue < 35) return 'WARM';
     return 'HOT';
+  }
+
+  // Calculate windspeed level (m/s)
+  calculateWindLevel(windspeedValue) {
+    if (windspeedValue < 1) return 'CALM';
+    if (windspeedValue < 5) return 'LIGHT';
+    if (windspeedValue < 10) return 'MODERATE';
+    if (windspeedValue < 15) return 'FRESH';
+    return 'STRONG';
   }
 
   // Mock sensor data for development/testing
@@ -625,6 +655,10 @@ class SensorService {
         value: "N/A",
         level: "NO SENSORS DETECTED"
       },
+      wind: {
+        value: "N/A",
+        level: "NO SENSORS DETECTED"
+      },
       clearTime: {
         hours: "N/A",
         minutes: "N/A",
@@ -673,6 +707,13 @@ class SensorService {
         { time: "N/A", value: 0 }
       ],
       temperatureLevels: [
+        { time: "N/A", value: 0 },
+        { time: "N/A", value: 0 },
+        { time: "N/A", value: 0 },
+        { time: "N/A", value: 0 },
+        { time: "N/A", value: 0 }
+      ],
+      windLevels: [
         { time: "N/A", value: 0 },
         { time: "N/A", value: 0 },
         { time: "N/A", value: 0 },

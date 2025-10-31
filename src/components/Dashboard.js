@@ -1332,6 +1332,29 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
+
+              <div className="wind-card">
+                <div className="card-header">
+                  <h4>
+                    <strong>Windspeed</strong>
+                  </h4>
+                  <span className="card-icon">🌀</span>
+                </div>
+                <div className="wind-content">
+                  {sensorData?.maintenance?.dashboard ? (
+                    <div className="maintenance-text">UNDER MAINTENANCE</div>
+                  ) : (
+                    <>
+                      <div className="wind-value">
+                        {sensorData?.wind?.value !== undefined ? `${Number(sensorData.wind.value).toFixed(1)} ms` : "N/A"}
+                      </div>
+                      <div className="wind-level">
+                        {sensorData?.wind?.level || "N/A"}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
             </div>
 
             {/* Prediction Cards - Display backend prediction results */}

@@ -1109,7 +1109,8 @@
 }
 
 .humidity-card,
-.temperature-card {
+.temperature-card,
+.wind-card {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 16px;
   padding: 24px;
@@ -1123,7 +1124,8 @@
 
 /* When inside middle column, make cards fill available width */
 .middle-column .humidity-card,
-.middle-column .temperature-card {
+.middle-column .temperature-card,
+.middle-column .wind-card {
   flex: 1;
   min-width: 0;
 }
@@ -1145,7 +1147,8 @@
 }
 
 .humidity-card .card-header,
-.temperature-card .card-header {
+.temperature-card .card-header,
+.wind-card .card-header {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1154,7 +1157,8 @@
 }
 
 .humidity-card .card-header h4,
-.temperature-card .card-header h4 {
+.temperature-card .card-header h4,
+.wind-card .card-header h4 {
   margin: 0;
   color: #333;
   font-size: 1.2rem;
@@ -1162,12 +1166,14 @@
 }
 
 .humidity-card .card-icon,
-.temperature-card .card-icon {
+.temperature-card .card-icon,
+.wind-card .card-icon {
   font-size: 1.5rem;
 }
 
 .humidity-content,
-.temperature-content {
+.temperature-content,
+.wind-content {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1175,7 +1181,8 @@
 }
 
 .humidity-value,
-.temperature-value {
+.temperature-value,
+.wind-value {
   font-size: 2.5rem;
   font-weight: bold;
   color: #2c3e50;
@@ -1183,7 +1190,8 @@
 }
 
 .humidity-level,
-.temperature-level {
+.temperature-level,
+.wind-level {
   font-size: 1rem;
   color: #7f8c8d;
   font-weight: 500;
@@ -1199,7 +1207,8 @@
   }
   
   .humidity-card,
-  .temperature-card {
+  .temperature-card,
+  .wind-card {
     min-width: 100%;
     max-width: 300px;
   }
@@ -1212,7 +1221,8 @@
   }
 
   .middle-column .humidity-card,
-  .middle-column .temperature-card {
+  .middle-column .temperature-card,
+  .middle-column .wind-card {
     min-width: 100%;
     max-width: none;
   }
