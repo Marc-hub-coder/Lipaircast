@@ -277,18 +277,18 @@ class ReportService {
         return [];
       }
       
-      // Convert device data to array - get ALL readings first
-      const allReadings = Object.values(deviceData);
+      // Convert device data to array while preserving keys (some datasets encode time in the key)
+      const allReadings = Object.entries(deviceData).map(([key, value]) => ({ __key: key, ...value }));
       console.log(`Total readings found for device ${deviceId}: ${allReadings.length}`);
       
       // Log some sample readings to understand the data structure
       if (allReadings.length > 0) {
         console.log('Sample reading:', allReadings[0]);
-        console.log('Sample timestamp:', allReadings[0]?.timestamp || allReadings[0]?.createdAt || allReadings[0]?.time);
-        console.log('Sample timestamp type:', typeof (allReadings[0]?.timestamp || allReadings[0]?.createdAt || allReadings[0]?.time));
+        console.log('Sample timestamp:', allReadings[0]?.timestamp || allReadings[0]?.createdAt || allReadings[0]?.time || allReadings[0]?.t || allReadings[0]?.__key);
+        console.log('Sample timestamp type:', typeof (allReadings[0]?.timestamp || allReadings[0]?.createdAt || allReadings[0]?.time || allReadings[0]?.t || allReadings[0]?.__key));
         
         // Test timestamp parsing
-        const sampleTimestamp = allReadings[0]?.timestamp || allReadings[0]?.createdAt || allReadings[0]?.time;
+        const sampleTimestamp = allReadings[0]?.timestamp || allReadings[0]?.createdAt || allReadings[0]?.time || allReadings[0]?.t || allReadings[0]?.__key;
         if (sampleTimestamp) {
           let testTime;
           if (typeof sampleTimestamp === 'string' && sampleTimestamp.includes('_')) {
@@ -347,12 +347,16 @@ class ReportService {
     console.log(`Filtering readings from ${start.toISOString()} to ${end.toISOString()}`);
     
     const filteredReadings = readings.filter(reading => {
-      const timestamp = reading.timestamp || reading.createdAt || reading.time || 0;
+      const timestamp = reading.timestamp || reading.createdAt || reading.time || reading.t || reading.__key || 0;
       let readingTime;
       
       if (typeof timestamp === 'string') {
         // Handle different string formats
-        if (timestamp.includes('_')) {
+        if (/^\d+$/.test(timestamp)) {
+          // Numeric string epoch seconds/ms
+          const num = Number(timestamp);
+          readingTime = num > 1e12 ? num : num * 1000;
+        } else if (timestamp.includes('_')) {
           // Format: YYYY-MM-DD_HH-mm-ss
           const [d, hms] = timestamp.split('_');
           const [Y, M, D] = (d || '').split('-').map(Number);
@@ -391,13 +395,16 @@ class ReportService {
   // Convert Firebase readings to daily data format
   convertReadingsToDailyData(readings, parameters) {
     return readings.map(reading => {
-      const timestamp = reading.timestamp || reading.createdAt || reading.time || Date.now();
+      const timestamp = reading.timestamp || reading.createdAt || reading.time || reading.t || reading.__key || Date.now();
       
       // Parse timestamp using the same logic as filtering
       let readingTime;
       if (typeof timestamp === 'string') {
         // Handle different string formats
-        if (timestamp.includes('_')) {
+        if (/^\d+$/.test(timestamp)) {
+          const num = Number(timestamp);
+          readingTime = num > 1e12 ? num : num * 1000;
+        } else if (timestamp.includes('_')) {
           // Format: YYYY-MM-DD_HH-mm-ss
           const [d, hms] = timestamp.split('_');
           const [Y, M, D] = (d || '').split('-').map(Number);
