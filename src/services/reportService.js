@@ -540,7 +540,7 @@ class ReportService {
       console.log(`Using ${historicalData.length} actual readings from Firebase for date range ${startDate} to ${endDate}`);
       dailyData = historicalData;
       summary = this.calculateSummaryFromRealData(dailyData, parameters);
-      alerts = this.generateAlertsFromRealData(dailyData, daysDiff);
+      alerts = [];
       maintenanceLog = this.generateMaintenanceLogFromRealData(daysDiff);
       maintenanceOccurrences = maintenanceHistory || [];
     } else {
@@ -749,7 +749,6 @@ class ReportService {
       totalReadings: dailyData.length,
       averageAQI: 'UNDER MAINTENANCE',
       averageSO2: 'UNDER MAINTENANCE',
-      alertsCount: dailyData.length, // Each reading shows maintenance
       systemStatus: 'Maintenance Mode'
     };
   }
@@ -760,7 +759,6 @@ class ReportService {
       totalReadings: dailyData.length,
       averageAQI: 'NO SENSORS DETECTED',
       averageSO2: 'NO SENSORS DETECTED',
-      alertsCount: dailyData.length, // Each reading shows no sensors
       systemStatus: 'No Sensors Detected'
     };
   }
@@ -770,7 +768,7 @@ class ReportService {
     let totalReadings = dailyData.length;
     let averageAQI = 0;
     let averageSO2 = 0;
-    let alertsCount = Math.floor(Math.random() * 20) + 5; // 5-25 alerts
+    // alerts removed
 
     if (parameters.includes('aqi')) {
       const aqiValues = dailyData.filter(row => row.aqi && typeof row.aqi === 'number').map(row => row.aqi);
@@ -790,7 +788,6 @@ class ReportService {
       totalReadings,
       averageAQI,
       averageSO2,
-      alertsCount,
       systemStatus: 'Operational'
     };
   }
@@ -807,7 +804,6 @@ class ReportService {
     let averageHumidity = 0;
     let averageTemperature = 0;
     let averageWindspeed = 0;
-    let alertsCount = 0;
 
     // Calculate averages for each parameter
     if (parameters.includes('aqi')) {
@@ -864,9 +860,6 @@ class ReportService {
         : 0;
     }
 
-    // Count alerts based on high values
-    alertsCount = this.countAlertsFromRealData(dailyData, parameters);
-
     return {
       totalReadings,
       averageAQI,
@@ -877,7 +870,6 @@ class ReportService {
       averageHumidity,
       averageTemperature,
       averageWindspeed,
-      alertsCount,
       systemStatus: 'Operational'
     };
   }
@@ -1226,10 +1218,6 @@ class ReportService {
           csvContent = this.generateDailyDataCSV(data.dailyData, config);
           filename = `daily_data_${config.startDate}_${config.endDate}.csv`;
           break;
-        case 'alerts':
-          csvContent = this.generateAlertsCSV(data.alerts);
-          filename = `alerts_report_${config.startDate}_${config.endDate}.csv`;
-          break;
         default:
           throw new Error('Invalid export type');
       }
@@ -1264,8 +1252,8 @@ class ReportService {
 
     // Summary section
     csv += 'SUMMARY\n';
-    csv += 'Total Readings,Average AQI,Average SO2,Average Humidity,Average Temperature,Average Windspeed,Alerts Count,System Status\n';
-    csv += `${data.summary.totalReadings},${data.summary.averageAQI},${data.summary.averageSO2},${data.summary.averageHumidity ?? ''},${data.summary.averageTemperature ?? ''},${data.summary.averageWindspeed ?? ''},${data.summary.alertsCount},${data.summary.systemStatus || 'N/A'}\n\n`;
+    csv += 'Total Readings,Average AQI,Average SO2,Average Humidity,Average Temperature,Average Windspeed,System Status\n';
+    csv += `${data.summary.totalReadings},${data.summary.averageAQI},${data.summary.averageSO2},${data.summary.averageHumidity ?? ''},${data.summary.averageTemperature ?? ''},${data.summary.averageWindspeed ?? ''},${data.summary.systemStatus || 'N/A'}\n\n`;
 
     // Daily data section
     csv += 'DAILY DATA\n';
@@ -1301,11 +1289,7 @@ class ReportService {
       csv += values.join(',') + '\n';
     });
 
-    csv += '\nALERTS\n';
-    csv += 'Severity,Time,Message\n';
-    data.alerts.forEach(alert => {
-      csv += `${alert.severity},${alert.time},"${alert.message}"\n`;
-    });
+    // Alerts removed by request
 
     csv += '\nMAINTENANCE LOG\n';
     csv += 'Type,Date,Description,Technician\n';

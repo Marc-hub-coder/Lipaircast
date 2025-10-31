@@ -364,7 +364,7 @@ const AdminReports = () => {
                 <div className="card-icon">🚨</div>
                 <div className="card-content">
                   <h3>Alerts Count</h3>
-                  <p className="card-value">{reportData.summary.alertsCount}</p>
+                  <p className="card-value">0</p>
                 </div>
               </div>
             </div>
@@ -417,21 +417,7 @@ const AdminReports = () => {
               )}
             </div>
 
-            {/* Alerts Section */}
-            <div className="alerts-section">
-              <h3 className="subsection-title">🚨 System Alerts</h3>
-              <div className="alerts-grid">
-                {reportData.alerts.map((alert, index) => (
-                  <div key={index} className={`alert-item ${alert.severity}`}>
-                    <div className="alert-header">
-                      <span className="alert-severity">{alert.severity}</span>
-                      <span className="alert-time">{alert.time}</span>
-                    </div>
-                    <p className="alert-message">{alert.message}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
+            {/* Alerts removed by request */}
 
             
 
@@ -453,12 +439,7 @@ const AdminReports = () => {
                   📅 Export Daily Data (CSV)
                 </button>
                 
-                <button 
-                  className="export-btn csv"
-                  onClick={() => exportCSV('alerts')}
-                >
-                  🚨 Export Alerts (CSV)
-                </button>
+                {/* Alerts export removed by request */}
                 
                 <button 
                   className="export-btn print"
