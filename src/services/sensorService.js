@@ -588,6 +588,42 @@ class SensorService {
         data.airQuality.level = "UNDER MAINTENANCE";
         data.airQuality.aqi = "N/A";
       }
+      if (settings.humidityCard) {
+        data.humidity.value = "N/A";
+        data.humidity.level = "UNDER MAINTENANCE";
+        data.humidityLevels = [
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 }
+        ];
+      }
+      if (settings.temperatureCard) {
+        data.temperature.value = "N/A";
+        data.temperature.level = "UNDER MAINTENANCE";
+        data.temperatureLevels = [
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 }
+        ];
+      }
+      if (settings.windCard) {
+        if (!data.wind) data.wind = { value: "N/A", level: "UNDER MAINTENANCE" };
+        else {
+          data.wind.value = "N/A";
+          data.wind.level = "UNDER MAINTENANCE";
+        }
+        data.windLevels = [
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 },
+          { time: "N/A", value: 0 }
+        ];
+      }
       if (settings.pm25Chart) {
         data.pm25Levels = [
           { time: "N/A", value: 0 },
@@ -631,7 +667,11 @@ class SensorService {
       pm25Chart: !!settings.pm25Chart,
       pm10Chart: !!settings.pm10Chart,
       coChart: !!settings.coChart,
-      no2Chart: !!settings.no2Chart
+      no2Chart: !!settings.no2Chart,
+      aqiDisplay: !!settings.aqiDisplay,
+      humidityCard: !!settings.humidityCard,
+      temperatureCard: !!settings.temperatureCard,
+      windCard: !!settings.windCard
     };
     return data;
   }

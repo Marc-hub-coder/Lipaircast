@@ -36,14 +36,17 @@ class AdminService {
       coChart: !!settings.coChart,
       no2Chart: !!settings.no2Chart,
       aqiDisplay: !!settings.aqiDisplay,
+      humidityCard: !!settings.humidityCard,
+      temperatureCard: !!settings.temperatureCard,
+      windCard: !!settings.windCard,
       updatedAt: Date.now(),
     };
     try {
       await db.ref('admin/maintenanceSettings').set(safe);
       localStorage.setItem('maintenanceSettings', JSON.stringify(safe));
       // Determine maintenance mode transitions and log history
-      const wasMaint = !!(previous && (previous.dashboard || previous.pm25Chart || previous.pm10Chart || previous.coChart || previous.no2Chart || previous.aqiDisplay));
-      const isMaint = !!(safe.dashboard || safe.pm25Chart || safe.pm10Chart || safe.coChart || safe.no2Chart || safe.aqiDisplay);
+      const wasMaint = !!(previous && (previous.dashboard || previous.pm25Chart || previous.pm10Chart || previous.coChart || previous.no2Chart || previous.aqiDisplay || previous.humidityCard || previous.temperatureCard || previous.windCard));
+      const isMaint = !!(safe.dashboard || safe.pm25Chart || safe.pm10Chart || safe.coChart || safe.no2Chart || safe.aqiDisplay || safe.humidityCard || safe.temperatureCard || safe.windCard);
       const now = safe.updatedAt;
       const historyRef = db.ref('admin/maintenanceHistory');
 

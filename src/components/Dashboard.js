@@ -1295,7 +1295,7 @@ const Dashboard = () => {
                   <span className="card-icon">💧</span>
                 </div>
                 <div className="humidity-content">
-                  {sensorData?.maintenance?.dashboard ? (
+                  {(sensorData?.maintenance?.dashboard || sensorData?.maintenance?.humidityCard) ? (
                     <div className="maintenance-text">UNDER MAINTENANCE</div>
                   ) : (
                     <>
@@ -1318,7 +1318,7 @@ const Dashboard = () => {
                   <span className="card-icon">🌡️</span>
                 </div>
                 <div className="temperature-content">
-                  {sensorData?.maintenance?.dashboard ? (
+                  {(sensorData?.maintenance?.dashboard || sensorData?.maintenance?.temperatureCard) ? (
                     <div className="maintenance-text">UNDER MAINTENANCE</div>
                   ) : (
                     <>
@@ -1341,7 +1341,7 @@ const Dashboard = () => {
                   <span className="card-icon">🌀</span>
                 </div>
                 <div className="wind-content">
-                  {sensorData?.maintenance?.dashboard ? (
+                  {(sensorData?.maintenance?.dashboard || sensorData?.maintenance?.windCard) ? (
                     <div className="maintenance-text">UNDER MAINTENANCE</div>
                   ) : (
                     <>

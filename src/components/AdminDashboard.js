@@ -11,7 +11,10 @@ const AdminDashboard = () => {
     pm10Chart: false,
     coChart: false,
     no2Chart: false,
-    aqiDisplay: false
+    aqiDisplay: false,
+    humidityCard: false,
+    temperatureCard: false,
+    windCard: false
   });
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [vogAlertEnabled, setVogAlertEnabled] = useState(false);
@@ -58,6 +61,9 @@ const AdminDashboard = () => {
             coChart: !!initial.coChart,
             no2Chart: !!initial.no2Chart,
             aqiDisplay: !!initial.aqiDisplay,
+            humidityCard: !!initial.humidityCard,
+            temperatureCard: !!initial.temperatureCard,
+            windCard: !!initial.windCard,
           });
         } else {
           const savedMaintenance = localStorage.getItem('maintenanceSettings');
@@ -70,6 +76,9 @@ const AdminDashboard = () => {
               coChart: !!parsed.coChart,
               no2Chart: !!parsed.no2Chart,
               aqiDisplay: !!parsed.aqiDisplay,
+              humidityCard: !!parsed.humidityCard,
+              temperatureCard: !!parsed.temperatureCard,
+              windCard: !!parsed.windCard,
             });
           }
         }
@@ -85,6 +94,9 @@ const AdminDashboard = () => {
             coChart: !!v?.coChart,
             no2Chart: !!v?.no2Chart,
             aqiDisplay: !!v?.aqiDisplay,
+            humidityCard: !!v?.humidityCard,
+            temperatureCard: !!v?.temperatureCard,
+            windCard: !!v?.windCard,
           });
         });
       } catch (_) {}
@@ -213,6 +225,39 @@ const AdminDashboard = () => {
                     onChange={() => handleMaintenanceToggle('aqiDisplay')}
                   />
                   <span>AQI Display</span>
+                </label>
+              </div>
+              
+              <div className="maintenance-item">
+                <label className="maintenance-label">
+                  <input
+                    type="checkbox"
+                    checked={maintenanceSettings.humidityCard}
+                    onChange={() => handleMaintenanceToggle('humidityCard')}
+                  />
+                  <span>Humidity Card</span>
+                </label>
+              </div>
+
+              <div className="maintenance-item">
+                <label className="maintenance-label">
+                  <input
+                    type="checkbox"
+                    checked={maintenanceSettings.temperatureCard}
+                    onChange={() => handleMaintenanceToggle('temperatureCard')}
+                  />
+                  <span>Temperature Card</span>
+                </label>
+              </div>
+
+              <div className="maintenance-item">
+                <label className="maintenance-label">
+                  <input
+                    type="checkbox"
+                    checked={maintenanceSettings.windCard}
+                    onChange={() => handleMaintenanceToggle('windCard')}
+                  />
+                  <span>Windspeed Card</span>
                 </label>
               </div>
             </div>
