@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/icon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="VOG & Air Quality Dashboard - Admin" />
+    <link rel="apple-touch-icon" href="/icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Admin</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script>
+      // Load the React app by fetching index.html and extracting the script tags
+      fetch('/')
+        .then(response => response.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          
+          // Extract and load CSS
+          const cssLinks = doc.querySelectorAll('link[rel="stylesheet"]');
+          cssLinks.forEach(link => {
+            const newLink = document.createElement('link');
+            newLink.rel = 'stylesheet';
+            newLink.href = link.href;
+            document.head.appendChild(newLink);
+          });
+          
+          // Extract and load JS
+          const scripts = doc.querySelectorAll('script[src]');
+          scripts.forEach(script => {
+            const newScript = document.createElement('script');
+            newScript.src = script.src;
+            newScript.defer = script.defer;
+            document.head.appendChild(newScript);
+          });
+        })
+        .catch(error => {
+          console.error('Failed to load React app:', error);
+          // Fallback: redirect to home page
+          window.location.href = '/';
+        });
+    </script>
+  </body>
+</html>
