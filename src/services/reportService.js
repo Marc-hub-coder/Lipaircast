@@ -143,6 +143,23 @@ class ReportService {
         so2: reading.so2 || 0,
         progress: this.calculateProgress(reading.so2 || 0)
       },
+      humidity: {
+        value: reading.humidity != null ? toNumber(reading.humidity) : 0,
+        level: ''
+      },
+      temperature: {
+        value: reading.temperature != null ? toNumber(reading.temperature) : 0,
+        level: ''
+      },
+      wind: {
+        value: (reading.windspeed != null ? toNumber(reading.windspeed)
+          : reading.windSpeed != null ? toNumber(reading.windSpeed)
+          : reading.wind_speed != null ? toNumber(reading.wind_speed)
+          : reading.wind != null ? toNumber(reading.wind)
+          : reading.ws != null ? toNumber(reading.ws)
+          : 0),
+        level: ''
+      },
       clearTime: {
         hours: reading.clearTime?.hours || 0,
         minutes: reading.clearTime?.minutes || 0,
@@ -153,6 +170,9 @@ class ReportService {
       pm10Levels: [{ time: "Current", value: reading.pm10 || 0 }],
       coLevels: [{ time: "Current", value: reading.co || 0 }],
       no2Levels: [{ time: "Current", value: reading.no2 || 0 }],
+      humidityLevels: [{ time: "Current", value: reading.humidity != null ? toNumber(reading.humidity) : 0 }],
+      temperatureLevels: [{ time: "Current", value: reading.temperature != null ? toNumber(reading.temperature) : 0 }],
+      windLevels: [{ time: "Current", value: (reading.windspeed != null ? toNumber(reading.windspeed) : reading.windSpeed != null ? toNumber(reading.windSpeed) : reading.wind_speed != null ? toNumber(reading.wind_speed) : reading.wind != null ? toNumber(reading.wind) : reading.ws != null ? toNumber(reading.ws) : 0) }],
       particulateMatter: [{ time: "Current", value: reading.pm25 || 0 }],
       maintenance: {
         dashboard: false,
@@ -444,6 +464,24 @@ class ReportService {
       }
       if (parameters.includes('no2')) {
         row.no2 = reading.no2 || 0;
+      }
+      if (parameters.includes('humidity')) {
+        row.humidity = reading.humidity != null ? (typeof reading.humidity === 'string' ? parseFloat(reading.humidity) : Number(reading.humidity)) : 0;
+      }
+      if (parameters.includes('temperature')) {
+        row.temperature = reading.temperature != null ? (typeof reading.temperature === 'string' ? parseFloat(reading.temperature) : Number(reading.temperature)) : 0;
+      }
+      if (parameters.includes('windspeed')) {
+        const toNumber = (v) => {
+          const n = typeof v === 'string' ? parseFloat(v) : Number(v);
+          return Number.isFinite(n) ? n : 0;
+        };
+        row.windspeed = (reading.windspeed != null ? toNumber(reading.windspeed)
+          : reading.windSpeed != null ? toNumber(reading.windSpeed)
+          : reading.wind_speed != null ? toNumber(reading.wind_speed)
+          : reading.wind != null ? toNumber(reading.wind)
+          : reading.ws != null ? toNumber(reading.ws)
+          : 0);
       }
 
       return row;
@@ -763,6 +801,9 @@ class ReportService {
     let averagePM10 = 0;
     let averageCO = 0;
     let averageNO2 = 0;
+    let averageHumidity = 0;
+    let averageTemperature = 0;
+    let averageWindspeed = 0;
     let alertsCount = 0;
 
     // Calculate averages for each parameter
@@ -801,6 +842,25 @@ class ReportService {
         : 0;
     }
 
+    if (parameters.includes('humidity')) {
+      const humidityValues = dailyData.filter(row => row.humidity && typeof row.humidity === 'number').map(row => parseFloat(row.humidity));
+      averageHumidity = humidityValues.length > 0
+        ? parseFloat((humidityValues.reduce((sum, val) => sum + val, 0) / humidityValues.length).toFixed(2))
+        : 0;
+    }
+    if (parameters.includes('temperature')) {
+      const temperatureValues = dailyData.filter(row => row.temperature && typeof row.temperature === 'number').map(row => parseFloat(row.temperature));
+      averageTemperature = temperatureValues.length > 0
+        ? parseFloat((temperatureValues.reduce((sum, val) => sum + val, 0) / temperatureValues.length).toFixed(2))
+        : 0;
+    }
+    if (parameters.includes('windspeed')) {
+      const windValues = dailyData.filter(row => row.windspeed && typeof row.windspeed === 'number').map(row => parseFloat(row.windspeed));
+      averageWindspeed = windValues.length > 0
+        ? parseFloat((windValues.reduce((sum, val) => sum + val, 0) / windValues.length).toFixed(2))
+        : 0;
+    }
+
     // Count alerts based on high values
     alertsCount = this.countAlertsFromRealData(dailyData, parameters);
 
@@ -811,6 +871,9 @@ class ReportService {
       averagePM10,
       averageCO,
       averageNO2,
+      averageHumidity,
+      averageTemperature,
+      averageWindspeed,
       alertsCount,
       systemStatus: 'Operational'
     };
@@ -1198,8 +1261,8 @@ class ReportService {
 
     // Summary section
     csv += 'SUMMARY\n';
-    csv += 'Total Readings,Average AQI,Average SO2,Alerts Count,System Status\n';
-    csv += `${data.summary.totalReadings},${data.summary.averageAQI},${data.summary.averageSO2},${data.summary.alertsCount},${data.summary.systemStatus || 'N/A'}\n\n`;
+    csv += 'Total Readings,Average AQI,Average SO2,Average Humidity,Average Temperature,Average Windspeed,Alerts Count,System Status\n';
+    csv += `${data.summary.totalReadings},${data.summary.averageAQI},${data.summary.averageSO2},${data.summary.averageHumidity ?? ''},${data.summary.averageTemperature ?? ''},${data.summary.averageWindspeed ?? ''},${data.summary.alertsCount},${data.summary.systemStatus || 'N/A'}\n\n`;
 
     // Daily data section
     csv += 'DAILY DATA\n';
@@ -1209,6 +1272,12 @@ class ReportService {
     if (config.parameters.includes('pm10')) headers.push('PM10');
     if (config.parameters.includes('co')) headers.push('CO');
     if (config.parameters.includes('no2')) headers.push('NO2');
+    if (config.parameters.includes('humidity')) headers.push('Humidity');
+    if (config.parameters.includes('temperature')) headers.push('Temperature');
+    if (config.parameters.includes('windspeed')) headers.push('Windspeed');
+    if (config.parameters.includes('humidity')) headers.push('Humidity');
+    if (config.parameters.includes('temperature')) headers.push('Temperature');
+    if (config.parameters.includes('windspeed')) headers.push('Windspeed');
     
     csv += headers.join(',') + '\n';
     
@@ -1219,6 +1288,12 @@ class ReportService {
       if (config.parameters.includes('pm10')) values.push(row.pm10 || '');
       if (config.parameters.includes('co')) values.push(row.co || '');
       if (config.parameters.includes('no2')) values.push(row.no2 || '');
+      if (config.parameters.includes('humidity')) values.push(row.humidity || '');
+      if (config.parameters.includes('temperature')) values.push(row.temperature || '');
+      if (config.parameters.includes('windspeed')) values.push(row.windspeed || '');
+      if (config.parameters.includes('humidity')) values.push(row.humidity || '');
+      if (config.parameters.includes('temperature')) values.push(row.temperature || '');
+      if (config.parameters.includes('windspeed')) values.push(row.windspeed || '');
       
       csv += values.join(',') + '\n';
     });

@@ -10,7 +10,7 @@ const AdminReports = () => {
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
     location: 'all',
-    parameters: ['aqi', 'pm25', 'pm10', 'co', 'no2']
+    parameters: ['aqi', 'pm25', 'pm10', 'co', 'no2', 'humidity', 'temperature', 'windspeed']
   });
 
   const [reportData, setReportData] = useState(null);
@@ -89,7 +89,10 @@ const AdminReports = () => {
       pm25: 'PM2.5',
       pm10: 'PM10',
       co: 'Carbon Monoxide',
-      no2: 'Nitrogen Dioxide'
+      no2: 'Nitrogen Dioxide',
+      humidity: 'Humidity',
+      temperature: 'Temperature',
+      windspeed: 'Windspeed (ms)'
     };
     return labels[param] || param;
   };
@@ -189,7 +192,7 @@ const AdminReports = () => {
           <div className="parameters-section">
             <label className="config-label">Parameters to Include</label>
             <div className="parameters-grid">
-              {['aqi', 'pm25', 'pm10', 'co', 'no2'].map(param => (
+              {['aqi', 'pm25', 'pm10', 'co', 'no2', 'humidity', 'temperature', 'windspeed'].map(param => (
                 <label key={param} className="parameter-checkbox">
                   <input
                     type="checkbox"
@@ -326,6 +329,36 @@ const AdminReports = () => {
                   </div>
                 </div>
               )}
+
+              {reportData.summary.averageHumidity !== undefined && (
+                <div className="summary-card">
+                  <div className="card-icon">💧</div>
+                  <div className="card-content">
+                    <h3>Average Humidity</h3>
+                    <p className="card-value">{reportData.summary.averageHumidity}</p>
+                  </div>
+                </div>
+              )}
+
+              {reportData.summary.averageTemperature !== undefined && (
+                <div className="summary-card">
+                  <div className="card-icon">🌡️</div>
+                  <div className="card-content">
+                    <h3>Average Temperature</h3>
+                    <p className="card-value">{reportData.summary.averageTemperature}</p>
+                  </div>
+                </div>
+              )}
+
+              {reportData.summary.averageWindspeed !== undefined && (
+                <div className="summary-card">
+                  <div className="card-icon">🌀</div>
+                  <div className="card-content">
+                    <h3>Average Windspeed</h3>
+                    <p className="card-value">{reportData.summary.averageWindspeed}</p>
+                  </div>
+                </div>
+              )}
               
               <div className="summary-card">
                 <div className="card-icon">🚨</div>
@@ -351,6 +384,9 @@ const AdminReports = () => {
                       {reportConfig.parameters.includes('pm10') && <th>PM10</th>}
                       {reportConfig.parameters.includes('co') && <th>CO</th>}
                       {reportConfig.parameters.includes('no2') && <th>NO2</th>}
+                      {reportConfig.parameters.includes('humidity') && <th>Humidity (%)</th>}
+                      {reportConfig.parameters.includes('temperature') && <th>Temperature (°C)</th>}
+                      {reportConfig.parameters.includes('windspeed') && <th>Windspeed (ms)</th>}
                     </tr>
                   </thead>
                     <tbody>
@@ -363,6 +399,9 @@ const AdminReports = () => {
                           {reportConfig.parameters.includes('pm10') && <td>{row.pm10}</td>}
                           {reportConfig.parameters.includes('co') && <td>{row.co}</td>}
                           {reportConfig.parameters.includes('no2') && <td>{row.no2}</td>}
+                          {reportConfig.parameters.includes('humidity') && <td>{row.humidity}</td>}
+                          {reportConfig.parameters.includes('temperature') && <td>{row.temperature}</td>}
+                          {reportConfig.parameters.includes('windspeed') && <td>{row.windspeed}</td>}
                         </tr>
                       ))}
                     </tbody>
