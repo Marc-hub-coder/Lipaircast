@@ -767,7 +767,7 @@ const Dashboard = () => {
                 <span className="card-icon" aria-label="CO icon"><FlaskConical size={20} /></span>
               </div>
               {(() => {
-                const isMaint = sensorData?.maintenance?.dashboard
+                const isMaint = sensorData?.maintenance?.dashboard || sensorData?.maintenance?.coChart
                 const value = sensorData?.coLevels?.length > 0 ? sensorData.coLevels[sensorData.coLevels.length - 1].value : "N/A"
                 return (
                   <>
@@ -787,7 +787,7 @@ const Dashboard = () => {
                 <span className="card-icon" aria-label="NO2 icon"><Factory size={20} /></span>
               </div>
               {(() => {
-                const isMaint = sensorData?.maintenance?.dashboard
+                const isMaint = sensorData?.maintenance?.dashboard || sensorData?.maintenance?.no2Chart
                 const latestRaw = sensorData?.no2Levels?.length > 0
                   ? sensorData.no2Levels[sensorData.no2Levels.length - 1].value
                   : null
@@ -815,7 +815,7 @@ const Dashboard = () => {
                 <span className="card-icon" aria-label="PM2.5 icon"><Wind size={20} /></span>
               </div>
               {(() => {
-                const isMaint = sensorData?.maintenance?.dashboard
+                const isMaint = sensorData?.maintenance?.dashboard || sensorData?.maintenance?.pm25Chart
                 const value = sensorData?.pm25Levels?.length > 0 ? sensorData.pm25Levels[sensorData.pm25Levels.length - 1].value : "N/A"
                 return (
                   <>
@@ -834,7 +834,7 @@ const Dashboard = () => {
                 <span className="card-icon" aria-label="PM10 icon"><Wind size={20} /></span>
               </div>
               {(() => {
-                const isMaint = sensorData?.maintenance?.dashboard
+                const isMaint = sensorData?.maintenance?.dashboard || sensorData?.maintenance?.pm10Chart
                 const value = sensorData?.pm10Levels?.length > 0 ? sensorData.pm10Levels[sensorData.pm10Levels.length - 1].value : "N/A"
                 return (
                   <>
