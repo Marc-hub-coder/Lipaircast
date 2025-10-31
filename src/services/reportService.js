@@ -453,7 +453,8 @@ class ReportService {
         time: date.toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit' 
-        })
+        }),
+        _ms: readingTime
       };
 
       // Add parameter values
@@ -492,12 +493,7 @@ class ReportService {
       }
 
       return row;
-    }).sort((a, b) => {
-      // Sort by date and time
-      const dateA = new Date(a.date + ' ' + a.time);
-      const dateB = new Date(b.date + ' ' + b.time);
-      return dateA - dateB;
-    });
+    }).sort((a, b) => (a._ms - b._ms));
   }
 
   // Get historical data for the specified date range (legacy method)
@@ -559,7 +555,7 @@ class ReportService {
 
     return {
       summary,
-      dailyData: dailyData.slice(0, 100), // Limit to 100 rows for display
+      dailyData, // show full range for selected dates to avoid dropping latest readings
       alerts,
       maintenanceLog,
       maintenanceOccurrences,
