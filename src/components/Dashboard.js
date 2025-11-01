@@ -70,8 +70,13 @@ const Dashboard = () => {
     setPredictionLoading(true)
     try {
       const baseUrl = process.env.REACT_APP_PREDICTION_API_URL || 'https://thesis-backend-zrcb.onrender.com';
-      const apiUrl = `${baseUrl}/predict_all`;
+      // Build URL with location as query parameter if provided
+      let apiUrl = `${baseUrl}/predict_all`;
+      if (location) {
+        apiUrl += `?location=${encodeURIComponent(location)}`;
+      }
       console.log('Fetching predictions from backend:', apiUrl);
+      console.log('Location parameter:', location);
       
       const response = await fetch(apiUrl, {
         method: 'GET', // Use GET method as per backend support
