@@ -11,7 +11,7 @@ import { adminService } from "../services/adminService"
 const Dashboard = () => {
   const [sensorData, setSensorData] = useState(null)
   const [publicAlert, setPublicAlert] = useState(null)
-  const [selectedLocation, setSelectedLocation] = useState("")
+  const [selectedLocation, setSelectedLocation] = useState("6C:C8:40:35:32:F4") // Default to tagbakin sensor
   const [selectedFilter, setSelectedFilter] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [availableLocations, setAvailableLocations] = useState([])
