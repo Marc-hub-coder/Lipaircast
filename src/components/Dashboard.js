@@ -33,8 +33,10 @@ const Dashboard = () => {
   // Map raw device IDs to friendly names for display
   const getLocationLabel = (loc) => {
     if (!loc) return "";
-    // Default device shown as Sensor 1
-    return loc === '6C:C8:40:35:32:F4' ? 'Sensor 1' : loc;
+    // Map device IDs to friendly names
+    if (loc === '6C:C8:40:35:32:F4') return 'tagbakin';
+    if (loc === '6C:C8:40:34:D2:E8') return 'Lipa City Hall';
+    return loc;
   }
 
   // Function to fetch predictions with debouncing
