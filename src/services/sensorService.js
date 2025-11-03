@@ -178,6 +178,7 @@ class SensorService {
         humidity: latest.humidity !== undefined ? latest.humidity : 0,
         temperature: latest.temperature !== undefined ? latest.temperature : 0,
         windspeed: latest.windspeed !== undefined ? latest.windspeed : 0,
+        latestTimestampMs: latest.tsNum,
         pm25Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm25 })),
         pm10Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm10 })),
         coLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.co })),
@@ -294,6 +295,7 @@ class SensorService {
             humidity: latest.humidity !== undefined ? latest.humidity : 0,
             temperature: latest.temperature !== undefined ? latest.temperature : 0,
             windspeed: latest.windspeed !== undefined ? latest.windspeed : 0,
+            latestTimestampMs: latest.tsNum,
             pm25Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm25 })),
             pm10Levels: recentArray.map(r => ({ time: label(r.timestamp), value: r.pm10 })),
             coLevels: recentArray.map(r => ({ time: label(r.timestamp), value: r.co })),
@@ -417,6 +419,10 @@ class SensorService {
         pm10Chart: false,
         coChart: false,
         no2Chart: false
+      },
+      meta: {
+        latestTimestampMs: (typeof rawData.latestTimestampMs === 'number' ? rawData.latestTimestampMs : (typeof rawData.tsNum === 'number' ? rawData.tsNum : null)),
+        generatedAtMs: Date.now()
       }
     };
   }

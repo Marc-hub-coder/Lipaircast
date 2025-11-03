@@ -29,6 +29,8 @@ const Dashboard = () => {
   const [currentChartWidthPM10, setCurrentChartWidthPM10] = useState(0)
   const [predictions, setPredictions] = useState(null)
   const [predictionLoading, setPredictionLoading] = useState(false)
+  const mountStartRef = useRef(typeof performance !== 'undefined' ? performance.now() : Date.now())
+  const uptimeStartRef = useRef(null)
 
   // Map raw device IDs to friendly names for display
   const getLocationLabel = (loc) => {
@@ -58,6 +60,19 @@ const Dashboard = () => {
     try {
       const data = await sensorService.fetchSensorData(location)
       setSensorData(data)
+      try {
+        const nowMs = Date.now()
+        const latestMs = Number(data?.meta?.latestTimestampMs || 0)
+        if (!uptimeStartRef.current) uptimeStartRef.current = nowMs
+        if (latestMs) {
+          const delaySec = ((nowMs - latestMs) / 1000).toFixed(3)
+          // eslint-disable-next-line no-console
+          console.log(`[Perf] Data transmission delay: ${delaySec}s`)
+        }
+        const uptimeSec = ((nowMs - uptimeStartRef.current) / 1000).toFixed(1)
+        // eslint-disable-next-line no-console
+        console.log(`[Perf] Data uptime: ${uptimeSec}s`)
+      } catch (_) {}
     } catch (error) {
       console.error("Error fetching sensor data:", error)
     } finally {
@@ -77,7 +92,7 @@ const Dashboard = () => {
       }
       console.log('Fetching predictions from backend:', apiUrl);
       console.log('Location parameter:', location);
-      
+      const t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
       const response = await fetch(apiUrl, {
         method: 'GET', // Use GET method as per backend support
         headers: {
@@ -95,6 +110,12 @@ const Dashboard = () => {
       }
 
       const data = await response.json();
+      try {
+        const t1 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+        const apiSec = ((t1 - t0) / 1000).toFixed(3)
+        // eslint-disable-next-line no-console
+        console.log(`[Perf] Flask API response time: ${apiSec}s`)
+      } catch (_) {}
       console.log('Prediction data received from backend:', data);
       
       // Directly set the predictions from backend response
@@ -478,14 +499,34 @@ const Dashboard = () => {
       setAvailableLocations(locations)
 
       // Initial fetch for immediate UI
+      const tStart = mountStartRef.current || (typeof performance !== 'undefined' ? performance.now() : Date.now())
       await fetchSensorData(selectedLocation)
       await fetchPredictions(selectedLocation)
+      try {
+        const tNow = (typeof performance !== 'undefined' ? performance.now() : Date.now())
+        const dashSec = ((tNow - tStart) / 1000).toFixed(3)
+        // eslint-disable-next-line no-console
+        console.log(`[Perf] Dashboard response time (initial ready): ${dashSec}s`)
+      } catch (_) {}
 
       // Start realtime subscription for selected location (or default)
       unsubscribe = sensorService.onRealtimeUpdates(selectedLocation, (processedData) => {
         setSensorData(processedData)
         // Trigger prediction refresh when new sensor data arrives
         fetchPredictionsDebounced()
+        try {
+          const nowMs = Date.now()
+          const latestMs = Number(processedData?.meta?.latestTimestampMs || 0)
+          if (!uptimeStartRef.current) uptimeStartRef.current = nowMs
+          if (latestMs) {
+            const delaySec = ((nowMs - latestMs) / 1000).toFixed(3)
+            // eslint-disable-next-line no-console
+            console.log(`[Perf] Data transmission delay (realtime): ${delaySec}s`)
+          }
+          const uptimeSec = ((nowMs - uptimeStartRef.current) / 1000).toFixed(1)
+          // eslint-disable-next-line no-console
+          console.log(`[Perf] Data uptime: ${uptimeSec}s`)
+        } catch (_) {}
       })
 
       // Subscribe to admin maintenance and public alert for cross-device realtime updates
