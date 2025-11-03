@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { FlaskConical, Factory, Wind } from "lucide-react"
 import { Link } from "react-router-dom"
 import "../styles/Dashboard.css"
