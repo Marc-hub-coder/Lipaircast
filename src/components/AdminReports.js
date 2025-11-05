@@ -30,6 +30,15 @@ const AdminReports = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Map raw device IDs to friendly names for display
+  const getLocationLabel = (loc) => {
+    if (!loc) return "";
+    // Map device IDs to friendly names
+    if (loc === '6C:C8:40:35:32:F4') return 'Tagbakin';
+    if (loc === '6C:C8:40:34:D2:E8') return 'Lipa City Hall';
+    return loc;
+  };
+
   const loadLocations = async () => {
     try {
       const locations = await reportService.getAvailableLocations();
@@ -180,11 +189,15 @@ const AdminReports = () => {
                 onChange={(e) => handleConfigChange('location', e.target.value)}
                 className="config-select"
               >
-                {availableLocations.map(location => (
-                  <option key={location} value={location === 'All Locations' ? 'all' : location}>
-                    {location}
-                  </option>
-                ))}
+                {availableLocations.map(location => {
+                  const locationValue = location === 'All Locations' ? 'all' : location;
+                  const locationDisplay = location === 'All Locations' ? 'All Locations' : getLocationLabel(location);
+                  return (
+                    <option key={location} value={locationValue}>
+                      {locationDisplay}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
