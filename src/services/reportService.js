@@ -258,28 +258,52 @@ class ReportService {
       
       console.log('Available device IDs:', Object.keys(sensorsTree));
       
-      // Choose device based on location
+      // Choose device(s) based on location
       const deviceIds = Object.keys(sensorsTree);
       if (deviceIds.length === 0) {
         console.log('No device IDs found in sensors tree');
         return [];
       }
       
-      const deviceId = location && location !== 'all' && sensorsTree[location] 
-        ? location 
-        : deviceIds[0];
+      // If location is 'all', fetch data from all devices; otherwise, fetch from the selected device
+      let allReadings = [];
       
-      console.log(`Selected device ID: ${deviceId}`);
-      
-      const deviceData = sensorsTree[deviceId];
-      if (!deviceData) {
-        console.log(`No data found for device ID: ${deviceId}`);
-        return [];
+      if (location && location !== 'all' && sensorsTree[location]) {
+        // Single device selected
+        const deviceId = location;
+        console.log(`Selected device ID: ${deviceId}`);
+        const deviceData = sensorsTree[deviceId];
+        if (deviceData) {
+          const readings = Object.entries(deviceData).map(([key, value]) => ({ 
+            __key: key, 
+            __deviceId: deviceId, 
+            ...value 
+          }));
+          allReadings = readings;
+          console.log(`Total readings found for device ${deviceId}: ${readings.length}`);
+        }
+      } else {
+        // Fetch from all devices when location is 'all'
+        console.log('Fetching data from all devices');
+        deviceIds.forEach(deviceId => {
+          const deviceData = sensorsTree[deviceId];
+          if (deviceData) {
+            const readings = Object.entries(deviceData).map(([key, value]) => ({ 
+              __key: key, 
+              __deviceId: deviceId, 
+              ...value 
+            }));
+            allReadings = allReadings.concat(readings);
+            console.log(`Found ${readings.length} readings for device ${deviceId}`);
+          }
+        });
+        console.log(`Total readings from all devices: ${allReadings.length}`);
       }
       
-      // Convert device data to array while preserving keys (some datasets encode time in the key)
-      const allReadings = Object.entries(deviceData).map(([key, value]) => ({ __key: key, ...value }));
-      console.log(`Total readings found for device ${deviceId}: ${allReadings.length}`);
+      if (allReadings.length === 0) {
+        console.log('No readings found');
+        return [];
+      }
       
       // Log some sample readings to understand the data structure
       if (allReadings.length > 0) {
@@ -392,6 +416,15 @@ class ReportService {
     return filteredReadings;
   }
 
+  // Get location label from device ID
+  getLocationLabel(deviceId) {
+    if (!deviceId) return "";
+    // Map device IDs to friendly names
+    if (deviceId === '6C:C8:40:35:32:F4') return 'Tagbakin';
+    if (deviceId === '6C:C8:40:34:D2:E8') return 'Lipa City Hall';
+    return deviceId;
+  }
+
   // Convert Firebase readings to daily data format
   convertReadingsToDailyData(readings, parameters) {
     return readings.map(reading => {
@@ -428,12 +461,17 @@ class ReportService {
       
       const date = new Date(readingTime);
       
+      // Get location label from device ID
+      const deviceId = reading.__deviceId || '';
+      const locationLabel = this.getLocationLabel(deviceId);
+      
       // Check if date is valid
       if (isNaN(date.getTime())) {
         console.error('Invalid date created from timestamp:', timestamp, 'parsed as:', readingTime);
         return {
           date: 'Invalid Date',
           time: 'Invalid Date',
+          location: locationLabel,
           // Add parameter values with fallbacks
           ...(parameters.includes('aqi') && { aqi: reading.aqi || 0 }),
           ...(parameters.includes('so2') && { so2: reading.so2 || 0 }),
@@ -454,6 +492,7 @@ class ReportService {
           hour: '2-digit', 
           minute: '2-digit' 
         }),
+        location: locationLabel,
         _ms: readingTime
       };
 
@@ -1257,7 +1296,7 @@ class ReportService {
 
     // Daily data section
     csv += 'DAILY DATA\n';
-    const headers = ['Date', 'Time'];
+    const headers = ['Date', 'Time', 'Location'];
     if (config.parameters.includes('aqi')) headers.push('AQI');
     if (config.parameters.includes('pm25')) headers.push('PM2.5');
     if (config.parameters.includes('pm10')) headers.push('PM10');
@@ -1266,22 +1305,16 @@ class ReportService {
     if (config.parameters.includes('humidity')) headers.push('Humidity');
     if (config.parameters.includes('temperature')) headers.push('Temperature');
     if (config.parameters.includes('windspeed')) headers.push('Windspeed');
-    if (config.parameters.includes('humidity')) headers.push('Humidity');
-    if (config.parameters.includes('temperature')) headers.push('Temperature');
-    if (config.parameters.includes('windspeed')) headers.push('Windspeed');
     
     csv += headers.join(',') + '\n';
     
     data.dailyData.forEach(row => {
-      const values = [row.date, row.time];
+      const values = [row.date, row.time, row.location || ''];
       if (config.parameters.includes('aqi')) values.push(row.aqi || '');
       if (config.parameters.includes('pm25')) values.push(row.pm25 || '');
       if (config.parameters.includes('pm10')) values.push(row.pm10 || '');
       if (config.parameters.includes('co')) values.push(row.co || '');
       if (config.parameters.includes('no2')) values.push(row.no2 || '');
-      if (config.parameters.includes('humidity')) values.push(row.humidity || '');
-      if (config.parameters.includes('temperature')) values.push(row.temperature || '');
-      if (config.parameters.includes('windspeed')) values.push(row.windspeed || '');
       if (config.parameters.includes('humidity')) values.push(row.humidity || '');
       if (config.parameters.includes('temperature')) values.push(row.temperature || '');
       if (config.parameters.includes('windspeed')) values.push(row.windspeed || '');
@@ -1316,22 +1349,28 @@ class ReportService {
     csv += `Date Range: ${config.startDate} to ${config.endDate}\n`;
     csv += `Generated: ${new Date().toLocaleString()}\n\n`;
 
-    const headers = ['Date', 'Time'];
+    const headers = ['Date', 'Time', 'Location'];
     if (config.parameters.includes('aqi')) headers.push('AQI');
     if (config.parameters.includes('pm25')) headers.push('PM2.5');
     if (config.parameters.includes('pm10')) headers.push('PM10');
     if (config.parameters.includes('co')) headers.push('CO');
     if (config.parameters.includes('no2')) headers.push('NO2');
+    if (config.parameters.includes('humidity')) headers.push('Humidity');
+    if (config.parameters.includes('temperature')) headers.push('Temperature');
+    if (config.parameters.includes('windspeed')) headers.push('Windspeed');
     
     csv += headers.join(',') + '\n';
     
     dailyData.forEach(row => {
-      const values = [row.date, row.time];
+      const values = [row.date, row.time, row.location || ''];
       if (config.parameters.includes('aqi')) values.push(row.aqi || '');
       if (config.parameters.includes('pm25')) values.push(row.pm25 || '');
       if (config.parameters.includes('pm10')) values.push(row.pm10 || '');
       if (config.parameters.includes('co')) values.push(row.co || '');
       if (config.parameters.includes('no2')) values.push(row.no2 || '');
+      if (config.parameters.includes('humidity')) values.push(row.humidity || '');
+      if (config.parameters.includes('temperature')) values.push(row.temperature || '');
+      if (config.parameters.includes('windspeed')) values.push(row.windspeed || '');
       
       csv += values.join(',') + '\n';
     });

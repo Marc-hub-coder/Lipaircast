@@ -373,6 +373,7 @@ const AdminReports = () => {
                     <tr>
                       <th>Date</th>
                       <th>Time</th>
+                      <th>Location</th>
                       {reportConfig.parameters.includes('aqi') && <th>AQI</th>}
                       {reportConfig.parameters.includes('pm25') && <th>PM2.5</th>}
                       {reportConfig.parameters.includes('pm10') && <th>PM10</th>}
@@ -388,6 +389,7 @@ const AdminReports = () => {
                         <tr key={index}>
                           <td>{row.date}</td>
                           <td>{row.time}</td>
+                          <td>{row.location || ''}</td>
                           {reportConfig.parameters.includes('aqi') && <td>{row.aqi}</td>}
                           {reportConfig.parameters.includes('pm25') && <td>{row.pm25}</td>}
                           {reportConfig.parameters.includes('pm10') && <td>{row.pm10}</td>}
