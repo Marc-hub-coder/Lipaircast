@@ -39,6 +39,7 @@ class AdminService {
       humidityCard: !!settings.humidityCard,
       temperatureCard: !!settings.temperatureCard,
       windCard: !!settings.windCard,
+      location: settings.location || 'all',
       updatedAt: Date.now(),
     };
     try {

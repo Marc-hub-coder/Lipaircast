@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import AdminLogoutButton from './AdminLogoutButton';
 import '../styles/AdminDashboard.css';
 import { adminService } from '../services/adminService';
+import { sensorService } from '../services/sensorService';
 
 const AdminDashboard = () => {
   const [maintenanceSettings, setMaintenanceSettings] = useState({
@@ -14,8 +15,10 @@ const AdminDashboard = () => {
     aqiDisplay: false,
     humidityCard: false,
     temperatureCard: false,
-    windCard: false
+    windCard: false,
+    location: 'all'
   });
+  const [availableLocations, setAvailableLocations] = useState([]);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [vogAlertEnabled, setVogAlertEnabled] = useState(false);
   const toggleVogAlert = async (enabled) => {
@@ -64,6 +67,7 @@ const AdminDashboard = () => {
             humidityCard: !!initial.humidityCard,
             temperatureCard: !!initial.temperatureCard,
             windCard: !!initial.windCard,
+            location: initial.location || 'all',
           });
         } else {
           const savedMaintenance = localStorage.getItem('maintenanceSettings');
@@ -79,6 +83,7 @@ const AdminDashboard = () => {
               humidityCard: !!parsed.humidityCard,
               temperatureCard: !!parsed.temperatureCard,
               windCard: !!parsed.windCard,
+              location: parsed.location || 'all',
             });
           }
         }
@@ -97,6 +102,7 @@ const AdminDashboard = () => {
             humidityCard: !!v?.humidityCard,
             temperatureCard: !!v?.temperatureCard,
             windCard: !!v?.windCard,
+            location: v?.location || 'all',
           });
         });
       } catch (_) {}
@@ -105,6 +111,12 @@ const AdminDashboard = () => {
         const alert = await adminService.getPublicAlert();
         setVogAlertEnabled(!!alert);
         unsubAlert = adminService.onPublicAlert((a) => setVogAlertEnabled(!!a));
+      } catch (_) {}
+
+      // Fetch available locations
+      try {
+        const locations = await sensorService.getSensorLocations();
+        setAvailableLocations(locations || []);
       } catch (_) {}
     })();
 
@@ -261,6 +273,43 @@ const AdminDashboard = () => {
                 </label>
               </div>
             </div>
+            
+            {/* Location Filter - Show when any maintenance is enabled */}
+            {(maintenanceSettings.dashboard || maintenanceSettings.pm25Chart || maintenanceSettings.pm10Chart || 
+              maintenanceSettings.coChart || maintenanceSettings.no2Chart || maintenanceSettings.aqiDisplay || 
+              maintenanceSettings.humidityCard || maintenanceSettings.temperatureCard || maintenanceSettings.windCard) && (
+              <div className="maintenance-location-filter" style={{ marginTop: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', border: '2px solid #e1e5e9' }}>
+                <label className="sensor-control" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <span style={{ fontWeight: 600, color: '#555', fontSize: '0.95rem' }}>Location Filter</span>
+                  <select
+                    value={maintenanceSettings.location || 'all'}
+                    onChange={(e) => setMaintenanceSettings(prev => ({ ...prev, location: e.target.value }))}
+                    style={{
+                      padding: '12px 15px',
+                      border: '2px solid #e1e5e9',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      background: '#fff',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = '#667eea';
+                      e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = '#e1e5e9';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  >
+                    <option value="all">All Locations</option>
+                    {availableLocations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            )}
           </div>
 
           {/* Public Alert Controls */}
