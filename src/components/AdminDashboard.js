@@ -26,7 +26,7 @@ const AdminDashboard = () => {
   const getLocationLabel = (loc) => {
     if (!loc) return "";
     // Map device IDs to friendly names
-    if (loc === '6C:C8:40:35:32:F4') return 'tagbakin';
+    if (loc === '6C:C8:40:35:32:F4') return 'Tagbakin';
     if (loc === '6C:C8:40:34:D2:E8') return 'Lipa City Hall';
     return loc;
   };
