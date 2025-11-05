@@ -21,6 +21,15 @@ const AdminDashboard = () => {
   const [availableLocations, setAvailableLocations] = useState([]);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [vogAlertEnabled, setVogAlertEnabled] = useState(false);
+
+  // Map raw device IDs to friendly names for display (same as public dashboard)
+  const getLocationLabel = (loc) => {
+    if (!loc) return "";
+    // Map device IDs to friendly names
+    if (loc === '6C:C8:40:35:32:F4') return 'tagbakin';
+    if (loc === '6C:C8:40:34:D2:E8') return 'Lipa City Hall';
+    return loc;
+  };
   const toggleVogAlert = async (enabled) => {
     try {
       if (enabled) {
@@ -304,7 +313,7 @@ const AdminDashboard = () => {
                   >
                     <option value="all">All Locations</option>
                     {availableLocations.map(loc => (
-                      <option key={loc} value={loc}>{loc}</option>
+                      <option key={loc} value={loc}>{getLocationLabel(loc)}</option>
                     ))}
                   </select>
                 </label>
