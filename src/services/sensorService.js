@@ -15,10 +15,19 @@ class SensorService {
       if (maintenanceSettings) {
         const settings = JSON.parse(maintenanceSettings);
         const adminData = adminSensorData ? JSON.parse(adminSensorData) : null;
-        // If admin has set any maintenance mode, return maintenance data
-        if (settings.dashboard || settings.pm25Chart || 
-            settings.pm10Chart || settings.coChart || settings.no2Chart || settings.aqiDisplay) {
-          return this.getMaintenanceData(settings, adminData);
+        // Check if maintenance is enabled
+        const isMaintenanceEnabled = settings.dashboard || settings.pm25Chart || 
+            settings.pm10Chart || settings.coChart || settings.no2Chart || settings.aqiDisplay ||
+            settings.humidityCard || settings.temperatureCard || settings.windCard;
+        
+        if (isMaintenanceEnabled) {
+          // Check location filter: if set to 'all', apply to all locations
+          // If set to specific location, only apply when location matches
+          const maintenanceLocation = settings.location || 'all';
+          if (maintenanceLocation === 'all' || maintenanceLocation === location) {
+            return this.getMaintenanceData(settings, adminData);
+          }
+          // If location filter doesn't match, continue to fetch normal data
         }
       }
 
@@ -314,8 +323,17 @@ class SensorService {
               const maintenanceSettings = localStorage.getItem('maintenanceSettings');
               if (maintenanceSettings) {
                 const settings = JSON.parse(maintenanceSettings);
-                if (settings && (settings.dashboard || settings.pm25Chart || settings.pm10Chart || settings.coChart || settings.no2Chart || settings.aqiDisplay)) {
-                  finalData = this.getMaintenanceData(settings, finalData);
+                const isMaintenanceEnabled = settings && (settings.dashboard || settings.pm25Chart || 
+                    settings.pm10Chart || settings.coChart || settings.no2Chart || settings.aqiDisplay ||
+                    settings.humidityCard || settings.temperatureCard || settings.windCard);
+                
+                if (isMaintenanceEnabled) {
+                  // Check location filter: if set to 'all', apply to all locations
+                  // If set to specific location, only apply when location matches
+                  const maintenanceLocation = settings.location || 'all';
+                  if (maintenanceLocation === 'all' || maintenanceLocation === deviceId || maintenanceLocation === location) {
+                    finalData = this.getMaintenanceData(settings, finalData);
+                  }
                 }
               }
             } catch (_) {}
