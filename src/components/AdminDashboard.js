@@ -165,7 +165,7 @@ const AdminDashboard = () => {
           } else {
             const lastUpdate = updated[location].lastUpdate || 0;
             const timeSinceUpdate = (now - lastUpdate) / 1000; // seconds
-            const newStatus = timeSinceUpdate <= 10 ? 'running' : 'down';
+            const newStatus = timeSinceUpdate <= 15 ? 'running' : 'down';
             
             if (updated[location].status !== newStatus) {
               updated[location] = {
@@ -198,7 +198,7 @@ const AdminDashboard = () => {
       // Subscribe to realtime updates for this location
       const unsubscribe = sensorService.onRealtimeUpdates(location, (data) => {
         // Use the sensor reading timestamp to determine when the device last acquired data
-        // This ensures the 10-second countdown starts from when the sensor actually read the data
+        // This ensures the 15-second countdown starts from when the sensor actually read the data
         const sensorTimestamp = data?.meta?.latestTimestampMs;
         if (sensorTimestamp && typeof sensorTimestamp === 'number') {
           setDeviceStatuses(prev => ({
@@ -291,7 +291,7 @@ const AdminDashboard = () => {
                     <div className="device-status-info">
                       {timeSinceUpdate !== null && (
                         <span className="device-status-time">
-                          {timeSinceUpdate <= 10 
+                          {timeSinceUpdate <= 15 
                             ? `Last update: ${timeSinceUpdate}s ago`
                             : `No data for ${timeSinceUpdate}s`
                           }
