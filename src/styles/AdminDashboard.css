@@ -65,6 +65,132 @@
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
+/* Device Status Section */
+.device-status-section {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e5e9;
+}
+
+.device-status-title {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 25px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 3px solid #667eea;
+  padding-bottom: 10px;
+}
+
+.device-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.device-status-item {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid #e1e5e9;
+  transition: all 0.3s ease;
+}
+
+.device-status-item.status-running {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.device-status-item.status-down {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.device-status-item.status-unknown {
+  border-color: #9ca3af;
+  background: #f9fafb;
+}
+
+.device-status-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.device-status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.device-status-location {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.device-status-indicator {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.device-status-indicator.indicator-running {
+  color: #22c55e;
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.device-status-indicator.indicator-down {
+  color: #ef4444;
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes pulse-red {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.device-status-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.device-status-text {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.device-status-item.status-running .device-status-text {
+  color: #16a34a;
+}
+
+.device-status-item.status-down .device-status-text {
+  color: #dc2626;
+}
+
+.device-status-time {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
 .current-date,
 .current-time {
   font-weight: 600;
@@ -433,6 +559,14 @@
   .current-date,
   .current-time {
     font-size: 1rem;
+  }
+
+  .device-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .device-status-section {
+    padding: 20px;
   }
 }
 

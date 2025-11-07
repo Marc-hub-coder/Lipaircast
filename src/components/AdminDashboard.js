@@ -21,6 +21,7 @@ const AdminDashboard = () => {
   const [availableLocations, setAvailableLocations] = useState([]);
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const [vogAlertEnabled, setVogAlertEnabled] = useState(false);
+  const [deviceStatuses, setDeviceStatuses] = useState({}); // { location: { lastUpdate: timestamp, status: 'running'|'down' } }
 
   // Map raw device IDs to friendly names for display (same as public dashboard)
   const getLocationLabel = (loc) => {
@@ -141,6 +142,82 @@ const AdminDashboard = () => {
     };
   }, []);
 
+  // Device status monitoring effect
+  useEffect(() => {
+    if (availableLocations.length === 0) return;
+
+    const unsubscribers = [];
+    const statusCheckInterval = setInterval(() => {
+      setDeviceStatuses(prev => {
+        const now = Date.now();
+        const updated = { ...prev };
+        let changed = false;
+
+        // Check each location's status
+        availableLocations.forEach(location => {
+          if (!updated[location]) {
+            // Initialize if not present
+            updated[location] = {
+              lastUpdate: 0,
+              status: 'down'
+            };
+            changed = true;
+          } else {
+            const lastUpdate = updated[location].lastUpdate || 0;
+            const timeSinceUpdate = (now - lastUpdate) / 1000; // seconds
+            const newStatus = timeSinceUpdate <= 10 ? 'running' : 'down';
+            
+            if (updated[location].status !== newStatus) {
+              updated[location] = {
+                ...updated[location],
+                status: newStatus
+              };
+              changed = true;
+            }
+          }
+        });
+
+        return changed ? updated : prev;
+      });
+    }, 1000); // Check every second
+
+    // Subscribe to realtime updates for each location
+    availableLocations.forEach(location => {
+      // Initialize status for this location
+      setDeviceStatuses(prev => {
+        if (prev[location]) return prev; // Already initialized
+        return {
+          ...prev,
+          [location]: {
+            lastUpdate: Date.now(),
+            status: 'running'
+          }
+        };
+      });
+
+      // Subscribe to realtime updates for this location
+      const unsubscribe = sensorService.onRealtimeUpdates(location, (data) => {
+        // When we receive data, update the last update time to now
+        // This indicates the device is actively sending data
+        setDeviceStatuses(prev => ({
+          ...prev,
+          [location]: {
+            lastUpdate: Date.now(),
+            status: 'running'
+          }
+        }));
+      });
+      unsubscribers.push(unsubscribe);
+    });
+
+    return () => {
+      clearInterval(statusCheckInterval);
+      unsubscribers.forEach(unsub => {
+        if (typeof unsub === 'function') unsub();
+      });
+    };
+  }, [availableLocations]);
+
   return (
     <div className="admin-dashboard">
       <nav className="dashboard-navbar">
@@ -175,6 +252,50 @@ const AdminDashboard = () => {
               minute: '2-digit', 
               second: '2-digit' 
             })}
+          </div>
+        </div>
+
+        {/* Device Status Section */}
+        <div className="device-status-section">
+          <h2 className="device-status-title">📡 Device Status</h2>
+          <div className="device-status-grid">
+            {availableLocations.length > 0 ? (
+              availableLocations.map(location => {
+                const status = deviceStatuses[location]?.status || 'down';
+                const lastUpdate = deviceStatuses[location]?.lastUpdate;
+                const timeSinceUpdate = lastUpdate ? Math.floor((Date.now() - lastUpdate) / 1000) : null;
+                
+                return (
+                  <div 
+                    key={location} 
+                    className={`device-status-item ${status === 'running' ? 'status-running' : 'status-down'}`}
+                  >
+                    <div className="device-status-header">
+                      <span className="device-status-location">{getLocationLabel(location)}</span>
+                      <span className={`device-status-indicator ${status === 'running' ? 'indicator-running' : 'indicator-down'}`}>
+                        {status === 'running' ? '●' : '●'}
+                      </span>
+                    </div>
+                    <div className="device-status-info">
+                      {timeSinceUpdate !== null && (
+                        <span className="device-status-time">
+                          {timeSinceUpdate <= 10 
+                            ? `Last update: ${timeSinceUpdate}s ago`
+                            : `No data for ${timeSinceUpdate}s`
+                          }
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="device-status-item status-unknown">
+                <div className="device-status-header">
+                  <span className="device-status-location">No devices found</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
