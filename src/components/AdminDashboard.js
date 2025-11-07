@@ -197,15 +197,27 @@ const AdminDashboard = () => {
 
       // Subscribe to realtime updates for this location
       const unsubscribe = sensorService.onRealtimeUpdates(location, (data) => {
-        // When we receive data, update the last update time to now
-        // This indicates the device is actively sending data
-        setDeviceStatuses(prev => ({
-          ...prev,
-          [location]: {
-            lastUpdate: Date.now(),
-            status: 'running'
-          }
-        }));
+        // Use the sensor reading timestamp to determine when the device last acquired data
+        // This ensures the 10-second countdown starts from when the sensor actually read the data
+        const sensorTimestamp = data?.meta?.latestTimestampMs;
+        if (sensorTimestamp && typeof sensorTimestamp === 'number') {
+          setDeviceStatuses(prev => ({
+            ...prev,
+            [location]: {
+              lastUpdate: sensorTimestamp,
+              status: 'running'
+            }
+          }));
+        } else {
+          // Fallback to current time if timestamp is not available
+          setDeviceStatuses(prev => ({
+            ...prev,
+            [location]: {
+              lastUpdate: Date.now(),
+              status: 'running'
+            }
+          }));
+        }
       });
       unsubscribers.push(unsubscribe);
     });
