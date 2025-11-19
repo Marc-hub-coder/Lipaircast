@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars, no-unreachable */
 import { db, ensureEmailPasswordAuth } from './firebaseClient';
 import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import autoTable from 'jspdf-autotable';
 
 // Report Service for Admin Reports
 class ReportService {
@@ -1393,38 +1393,16 @@ class ReportService {
     return csv;
   }
 
-  // Export report to PDF
+  // Export report to PDF with structured data tables
   async exportToPDF(reportData, config) {
     try {
-      // Find the report display section element
-      const reportElement = document.querySelector('.report-display-section');
-      if (!reportElement) {
-        throw new Error('Report element not found');
+      if (!reportData) {
+        throw new Error('No report data available for export');
       }
 
-      // Ensure element is visible
-      const originalDisplay = reportElement.style.display;
-      reportElement.style.display = 'block';
-
-      // Create canvas from HTML element
-      const canvas = await html2canvas(reportElement, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        windowWidth: reportElement.scrollWidth,
-        windowHeight: reportElement.scrollHeight
-      });
-
-      // Calculate PDF dimensions (A4 size)
-      const imgWidth = 210; // A4 width in mm
-      const pageHeight = 297; // A4 height in mm
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-      // Create PDF
       const pdf = new jsPDF('p', 'mm', 'a4');
 
-      // Add header information on first page
+      // Header
       pdf.setFontSize(16);
       pdf.text('VOG & Air Quality Dashboard - Report', 105, 15, { align: 'center' });
       pdf.setFontSize(10);
@@ -1433,54 +1411,102 @@ class ReportService {
       const locationLabel = config.location === 'all' ? 'All Locations' : this.getLocationLabel(config.location);
       pdf.text(`Location: ${locationLabel}`, 10, 35);
       pdf.text(`Generated: ${new Date().toLocaleString()}`, 10, 40);
-      
-      // Start position for content image (after header)
-      const startY = 45;
-      const contentHeight = pageHeight - startY - 10; // Leave 10mm margin at bottom
-      const imgData = canvas.toDataURL('image/png');
-      
-      // Add content to PDF with pagination
-      if (imgHeight <= contentHeight) {
-        // Content fits on one page
-        pdf.addImage(imgData, 'PNG', 0, startY, imgWidth, imgHeight);
-      } else {
-        // Content spans multiple pages - split across pages
-        let heightLeft = imgHeight;
-        let position = startY;
-        let sourceY = 0;
-        
-        while (heightLeft > 0) {
-          const remainingOnPage = Math.min(contentHeight, heightLeft);
-          const sourceHeight = (remainingOnPage / imgHeight) * canvas.height;
-          
-          // Create a temporary canvas for this page slice
-          const pageCanvas = document.createElement('canvas');
-          pageCanvas.width = canvas.width;
-          pageCanvas.height = sourceHeight;
-          const ctx = pageCanvas.getContext('2d');
-          ctx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
-          
-          const pageImgData = pageCanvas.toDataURL('image/png');
-          pdf.addImage(pageImgData, 'PNG', 0, position, imgWidth, remainingOnPage);
-          
-          heightLeft -= remainingOnPage;
-          sourceY += sourceHeight;
-          
-          if (heightLeft > 0) {
-            pdf.addPage();
-            position = 10; // Start next page at top with margin
+
+      // Summary table
+      const summary = reportData.summary || {};
+      const summaryRows = [
+        ['Total Readings', summary.totalReadings ?? 0],
+        ['Average AQI', summary.averageAQI ?? '—'],
+        ['Average PM2.5', summary.averagePM25 ?? '—'],
+        ['Average PM10', summary.averagePM10 ?? '—'],
+        ['Average CO', summary.averageCO ?? '—'],
+        ['Average NO2', summary.averageNO2 ?? '—'],
+        ['Average Humidity', summary.averageHumidity ?? '—'],
+        ['Average Temperature', summary.averageTemperature ?? '—'],
+        ['Average Windspeed', summary.averageWindspeed ?? '—'],
+        ['System Status', reportData.systemStatus || summary.systemStatus || 'Unknown']
+      ].filter(row => row[1] !== undefined && row[1] !== null);
+
+      autoTable(pdf, {
+        startY: 45,
+        head: [['Metric', 'Value']],
+        body: summaryRows,
+        headStyles: { fillColor: [102, 126, 234], textColor: 255 },
+        styles: { fontSize: 10 }
+      });
+
+      let currentY = pdf.lastAutoTable ? pdf.lastAutoTable.finalY + 8 : 55;
+
+      // Daily data table
+      const parameterLabels = {
+        aqi: 'AQI',
+        pm25: 'PM2.5',
+        pm10: 'PM10',
+        co: 'CO',
+        no2: 'NO2',
+        humidity: 'Humidity (%)',
+        temperature: 'Temperature (°C)',
+        windspeed: 'Windspeed (m/s)'
+      };
+
+      if (reportData.dailyData && reportData.dailyData.length > 0) {
+        const headers = ['Date', 'Time', 'Location'];
+        config.parameters.forEach(param => {
+          if (parameterLabels[param]) {
+            headers.push(parameterLabels[param]);
           }
-        }
+        });
+
+        const body = reportData.dailyData.map(row => {
+          const values = [
+            row.date || '',
+            row.time || '',
+            row.location || ''
+          ];
+          config.parameters.forEach(param => {
+            if (parameterLabels[param]) {
+              const value = row[param];
+              values.push(value === undefined || value === null ? '—' : value);
+            }
+          });
+          return values;
+        });
+
+        autoTable(pdf, {
+          startY: currentY,
+          head: [headers],
+          body,
+          styles: { fontSize: 9, cellPadding: 2 },
+          headStyles: { fillColor: [40, 167, 69], textColor: 255 },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          columnStyles: { 0: { cellWidth: 25 }, 1: { cellWidth: 20 }, 2: { cellWidth: 30 } }
+        });
+
+        currentY = pdf.lastAutoTable.finalY + 8;
+      } else {
+        pdf.text('No sensor readings were found for the selected date range.', 10, currentY);
+        currentY += 8;
       }
 
-      // Generate filename
+      // Maintenance occurrences table (optional)
+      if (reportData.maintenanceOccurrences && reportData.maintenanceOccurrences.length > 0) {
+        const maintenanceBody = reportData.maintenanceOccurrences.slice(0, 10).map(item => [
+          item.start || 'Unknown',
+          item.end || 'Ongoing',
+          item.durationMs != null ? (item.durationMs / (1000 * 60 * 60)).toFixed(2) : '—'
+        ]);
+
+        autoTable(pdf, {
+          startY: currentY,
+          head: [['Maintenance Start', 'Maintenance End', 'Duration (hrs)']],
+          body: maintenanceBody,
+          styles: { fontSize: 9, cellPadding: 2 },
+          headStyles: { fillColor: [220, 53, 69], textColor: 255 }
+        });
+      }
+
       const filename = `report_${config.startDate}_${config.endDate}.pdf`;
-
-      // Download PDF
       pdf.save(filename);
-
-      // Restore original display
-      reportElement.style.display = originalDisplay;
     } catch (error) {
       console.error('Error exporting PDF:', error);
       throw new Error('Failed to export PDF');
