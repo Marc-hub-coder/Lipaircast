@@ -10,6 +10,8 @@
     "@testing-library/user-event": "^13.5.0",
     "bootstrap": "^5.3.7",
     "firebase": "^10.14.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.4",
     "lucide-react": "^0.536.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

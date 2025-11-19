@@ -92,6 +92,17 @@ const AdminReports = () => {
     window.print();
   };
 
+  const exportPDF = async () => {
+    if (!reportData) return;
+    
+    try {
+      await reportService.exportToPDF(reportData, reportConfig);
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      alert('Error exporting PDF. Please try again.');
+    }
+  };
+
   const getParameterLabel = (param) => {
     const labels = {
       aqi: 'Air Quality Index',
@@ -446,6 +457,13 @@ const AdminReports = () => {
                   onClick={() => exportCSV('daily')}
                 >
                   📅 Export Daily Data (CSV)
+                </button>
+                
+                <button 
+                  className="export-btn pdf"
+                  onClick={exportPDF}
+                >
+                  📄 Download PDF
                 </button>
                 
                 {/* Alerts export removed by request */}

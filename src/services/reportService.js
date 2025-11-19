@@ -1,5 +1,7 @@
 /* eslint-disable no-unused-vars, no-unreachable */
 import { db, ensureEmailPasswordAuth } from './firebaseClient';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Report Service for Admin Reports
 class ReportService {
@@ -1389,6 +1391,100 @@ class ReportService {
     });
 
     return csv;
+  }
+
+  // Export report to PDF
+  async exportToPDF(reportData, config) {
+    try {
+      // Find the report display section element
+      const reportElement = document.querySelector('.report-display-section');
+      if (!reportElement) {
+        throw new Error('Report element not found');
+      }
+
+      // Ensure element is visible
+      const originalDisplay = reportElement.style.display;
+      reportElement.style.display = 'block';
+
+      // Create canvas from HTML element
+      const canvas = await html2canvas(reportElement, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+        windowWidth: reportElement.scrollWidth,
+        windowHeight: reportElement.scrollHeight
+      });
+
+      // Calculate PDF dimensions (A4 size)
+      const imgWidth = 210; // A4 width in mm
+      const pageHeight = 297; // A4 height in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Create PDF
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      // Add header information on first page
+      pdf.setFontSize(16);
+      pdf.text('VOG & Air Quality Dashboard - Report', 105, 15, { align: 'center' });
+      pdf.setFontSize(10);
+      pdf.text(`Report Type: ${config.reportType}`, 10, 25);
+      pdf.text(`Date Range: ${config.startDate} to ${config.endDate}`, 10, 30);
+      const locationLabel = config.location === 'all' ? 'All Locations' : this.getLocationLabel(config.location);
+      pdf.text(`Location: ${locationLabel}`, 10, 35);
+      pdf.text(`Generated: ${new Date().toLocaleString()}`, 10, 40);
+      
+      // Start position for content image (after header)
+      const startY = 45;
+      const contentHeight = pageHeight - startY - 10; // Leave 10mm margin at bottom
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Add content to PDF with pagination
+      if (imgHeight <= contentHeight) {
+        // Content fits on one page
+        pdf.addImage(imgData, 'PNG', 0, startY, imgWidth, imgHeight);
+      } else {
+        // Content spans multiple pages - split across pages
+        let heightLeft = imgHeight;
+        let position = startY;
+        let sourceY = 0;
+        
+        while (heightLeft > 0) {
+          const remainingOnPage = Math.min(contentHeight, heightLeft);
+          const sourceHeight = (remainingOnPage / imgHeight) * canvas.height;
+          
+          // Create a temporary canvas for this page slice
+          const pageCanvas = document.createElement('canvas');
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = sourceHeight;
+          const ctx = pageCanvas.getContext('2d');
+          ctx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+          
+          const pageImgData = pageCanvas.toDataURL('image/png');
+          pdf.addImage(pageImgData, 'PNG', 0, position, imgWidth, remainingOnPage);
+          
+          heightLeft -= remainingOnPage;
+          sourceY += sourceHeight;
+          
+          if (heightLeft > 0) {
+            pdf.addPage();
+            position = 10; // Start next page at top with margin
+          }
+        }
+      }
+
+      // Generate filename
+      const filename = `report_${config.startDate}_${config.endDate}.pdf`;
+
+      // Download PDF
+      pdf.save(filename);
+
+      // Restore original display
+      reportElement.style.display = originalDisplay;
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+      throw new Error('Failed to export PDF');
+    }
   }
 }
 

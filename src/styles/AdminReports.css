@@ -438,6 +438,15 @@
   background: #218838;
 }
 
+.export-btn.pdf {
+  background: #dc3545;
+  color: white;
+}
+
+.export-btn.pdf:hover {
+  background: #c82333;
+}
+
 .export-btn.print {
   background: #6c757d;
   color: white;
